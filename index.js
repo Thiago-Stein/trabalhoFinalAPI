@@ -191,6 +191,70 @@ async function iniciarBanco() {
         res.json(filme);
     });
 
+        // Adicionar filme novo (Rota Protegida - Precisa do Token!)
+    app.post('/api/filmes', checarToken, async (req, res) => {
+        const { nome, tempoEmMinutos, genero, classificacaoIndicativa, diretor_id } = req.body;
+
+        if (!nome || !genero || !tempoEmMinutos || classificacaoIndicativa === undefined || !diretor_id) {
+            return res.status(400).json({ erro: "Campos obrigatórios faltando (incluindo diretor_id)" });
+        }
+        if (typeof tempoEmMinutos !== 'number' || tempoEmMinutos <= 0) {
+            return res.status(400).json({ erro: "Tempo inválido" });
+        }
+        if (typeof classificacaoIndicativa !== 'number' || classificacaoIndicativa < 0) {
+            return res.status(400).json({ erro: "Classificação inválida" });
+        }
+
+        try {
+            const diretorExiste = await db.get('SELECT id FROM diretores WHERE id = ?', [diretor_id]);
+            if (!diretorExiste) return res.status(404).json({ erro: "Diretor não existe no banco" });
+
+            const result = await db.run(
+                'INSERT INTO filmes (nome, tempoEmMinutos, genero, classificacaoIndicativa, diretor_id) VALUES (?, ?, ?, ?, ?)',
+                [nome, tempoEmMinutos, genero, classificacaoIndicativa, diretor_id]
+            );
+
+            res.status(201).json({ 
+                mensagem: "Filme salvo com sucesso!", 
+                id_gerado: result.lastID 
+            });
+        } catch (error) {
+            res.status(500).json({ erro: "Erro ao salvar no banco" });
+        }
+    });
+
+    // Atualizar filme (Protegida)
+    app.put('/api/filmes/:id', checarToken, async (req, res) => {
+        const id = req.params.id;
+        const filmeAtual = await db.get('SELECT * FROM filmes WHERE id = ?', [id]);
+
+        if (!filmeAtual) return res.status(404).json({ erro: "Filme não encontrado" });
+
+        const nome = req.body.nome !== undefined ? req.body.nome : filmeAtual.nome;
+        const tempo = req.body.tempoEmMinutos !== undefined ? req.body.tempoEmMinutos : filmeAtual.tempoEmMinutos;
+        const gen = req.body.genero !== undefined ? req.body.genero : filmeAtual.genero;
+        const classInd = req.body.classificacaoIndicativa !== undefined ? req.body.classificacaoIndicativa : filmeAtual.classificacaoIndicativa;
+        const dirId = req.body.diretor_id !== undefined ? req.body.diretor_id : filmeAtual.diretor_id;
+
+        await db.run(
+            'UPDATE filmes SET nome = ?, tempoEmMinutos = ?, genero = ?, classificacaoIndicativa = ?, diretor_id = ? WHERE id = ?',
+            [nome, tempo, gen, classInd, dirId, id]
+        );
+
+        res.json({ mensagem: "Filme atualizado!" });
+    });
+
+    // Deletar filme (Protegida)
+    app.delete('/api/filmes/:id', checarToken, async (req, res) => {
+        const result = await db.run('DELETE FROM filmes WHERE id = ?', [req.params.id]);
+
+        if (result.changes === 0) {
+            return res.status(404).json({ erro: "Filme não encontrado" });
+        }
+
+        res.json({ mensagem: "Filme excluído do banco com sucesso!" });
+    });
+
     // Inicia o banco antes de escutar a porta
     iniciarBanco().then(() => {
         app.listen(3000, '0.0.0.0', () => console.log('API conectada ao SQLite na porta 3000!!'));
