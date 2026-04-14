@@ -257,5 +257,11 @@ async function iniciarBanco() {
 
     // Inicia o banco antes de escutar a porta
     iniciarBanco().then(() => {
-        app.listen(3000, '0.0.0.0', () => console.log('API conectada ao SQLite na porta 3000!!'));
+        // Só liga o servidor de verdade se NÃO estiver rodando teste automatizado
+        if (process.env.NODE_ENV !== 'test') {
+            app.listen(3000, '0.0.0.0', () => console.log('API conectada ao SQLite na porta 3000!!'));
+        }
     });
+
+    // Exporta a nossa API para o arquivo de testes conseguir usar
+    module.exports = app;
