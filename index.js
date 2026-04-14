@@ -259,7 +259,10 @@ async function iniciarBanco() {
     iniciarBanco().then(() => {
         // Só liga o servidor de verdade se NÃO estiver rodando teste automatizado
         if (process.env.NODE_ENV !== 'test') {
-            app.listen(3000, '0.0.0.0', () => console.log('API conectada ao SQLite na porta 3000!!'));
+            // Pega a porta do Render OU usa a 3000 se tiver rodando no seu PC
+            const PORTA = process.env.PORT || 3000; 
+            
+            app.listen(PORTA, '0.0.0.0', () => console.log(`API conectada ao SQLite na porta ${PORTA}!!`));
         }
     });
 
