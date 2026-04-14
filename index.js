@@ -1,9 +1,12 @@
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const { open } = require('sqlite');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 app.use(express.json());
+
+const SEGREDO_JWT = "rocky_grace_saviors_of_the_universe";
 
 let db; // Variável global do banco
 
@@ -76,92 +79,119 @@ async function iniciarBanco() {
         }
     }
 }
+    //Parte dos Middleswares e login.
+        // O "Porteiro": Verifica se quem tá chamando a rota tem o crachá (token)
+    function checarToken(req, res, next) {
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1]; // Tira a palavra "Bearer " da frente
 
+        if (!token) return res.status(401).json({ erro: "Acesso negado. Token não fornecido." });
 
-// Rota que lista os filmes com filtros, paginação e ordenação via Banco de Dados.
-app.get('/api/filmes', async (req, res) => {
-    const { genero, tempo_max, tempo_min, ordem, direcao, pagina = 1, limite = 11 } = req.query;
-
-    // A query base com o JOIN para pegar o nome do diretor
-    let query = `
-        SELECT f.id, f.nome, f.tempoEmMinutos, f.genero, f.classificacaoIndicativa, d.nome as diretor_nome 
-        FROM filmes f
-        JOIN diretores d ON f.diretor_id = d.id 
-        WHERE 1=1
-    `;
-    let params = [];
-    
-    // Uma query extra para contar o total de itens para a paginação
-    let queryCount = `SELECT COUNT(*) as total FROM filmes f WHERE 1=1`; 
-    let paramsCount = [];
-
-    // Filtros dinâmicos (Adiciona na query só se o usuário pedir)
-    if (genero) {
-        query += ` AND f.genero = ?`;
-        queryCount += ` AND f.genero = ?`;
-        params.push(genero);
-        paramsCount.push(genero);
-    }
-    if (tempo_max) {
-        query += ` AND f.tempoEmMinutos <= ?`;
-        queryCount += ` AND f.tempoEmMinutos <= ?`;
-        params.push(tempo_max);
-        paramsCount.push(tempo_max);
-    }
-    if (tempo_min) {
-        query += ` AND f.tempoEmMinutos >= ?`;
-        queryCount += ` AND f.tempoEmMinutos >= ?`;
-        params.push(tempo_min);
-        paramsCount.push(tempo_min);
-    }
-
-    // Ordenação (Com trava de segurança para evitar injeção de SQL)
-    const colunasValidas = ['nome', 'tempoEmMinutos'];
-    if (ordem && colunasValidas.includes(ordem)) {
-        const dirValida = direcao === 'desc' ? 'DESC' : 'ASC';
-        query += ` ORDER BY f.${ordem} ${dirValida}`;
-    }
-
-    // Paginação usando LIMIT e OFFSET do SQLite
-    const limiteNum = parseInt(limite) || 11;
-    const paginaNum = parseInt(pagina) || 1;
-    const offset = (paginaNum - 1) * limiteNum;
-
-    query += ` LIMIT ? OFFSET ?`;
-    params.push(limiteNum, offset);
-
-    try {
-        const dados = await db.all(query, params);
-        const { total } = await db.get(queryCount, paramsCount);
-
-        res.json({
-            dados,
-            paginacao: {
-                pagina_atual: paginaNum,
-                itens_por_pagina: limiteNum,
-                total_itens: total,
-                total_paginas: Math.ceil(total / limiteNum)
-            }
+        jwt.verify(token, SEGREDO_JWT, (err, usuario) => {
+            if (err) return res.status(403).json({ erro: "Token inválido ou expirado." });
+            req.usuario = usuario;
+            next(); // Se o token for válido, ele deixa a requisição passar!
         });
-    } catch (error) {
-        res.status(500).json({ erro: "Erro interno no servidor" });
     }
-});
 
-// Rota para buscar um filme específico pelo ID
-app.get('/api/filmes/:id', async (req, res) => {
-    const filme = await db.get(`
-        SELECT f.*, d.nome as diretor_nome 
-        FROM filmes f JOIN diretores d ON f.diretor_id = d.id 
-        WHERE f.id = ?
-    `, [req.params.id]);
+    // Rota de Login pra pegar o Token
+    app.post('/api/login', (req, res) => {
+        const { usuario, senha } = req.body;
+        
+        // Hardcoded pra facilitar, mas na vida real checaria no banco
+        if (usuario === 'admin' && senha === '123') {
+            // Gera um token que vale por 1 hora
+            const token = jwt.sign({ user: usuario }, SEGREDO_JWT, { expiresIn: '1h' });
+            return res.json({ token });
+        }
+        
+        res.status(401).json({ erro: "Usuário ou senha incorretos" });
+    });
 
-    if (!filme) return res.status(404).json({ erro: "Filme não encontrado no banco" });
-    
-    res.json(filme);
-});
+    // Rota que lista os filmes com filtros, paginação e ordenação via Banco de Dados.
+    app.get('/api/filmes', async (req, res) => {
+        const { genero, tempo_max, tempo_min, ordem, direcao, pagina = 1, limite = 11 } = req.query;
 
-// Inicia o banco antes de escutar a porta
-iniciarBanco().then(() => {
-    app.listen(3000, '0.0.0.0', () => console.log('API conectada ao SQLite na porta 3000!!'));
-});
+        // A query base com o JOIN para pegar o nome do diretor
+        let query = `
+            SELECT f.id, f.nome, f.tempoEmMinutos, f.genero, f.classificacaoIndicativa, d.nome as diretor_nome 
+            FROM filmes f
+            JOIN diretores d ON f.diretor_id = d.id 
+            WHERE 1=1
+        `;
+        let params = [];
+        
+        // Uma query extra para contar o total de itens para a paginação
+        let queryCount = `SELECT COUNT(*) as total FROM filmes f WHERE 1=1`; 
+        let paramsCount = [];
+
+        // Filtros dinâmicos (Adiciona na query só se o usuário pedir)
+        if (genero) {
+            query += ` AND f.genero = ?`;
+            queryCount += ` AND f.genero = ?`;
+            params.push(genero);
+            paramsCount.push(genero);
+        }
+        if (tempo_max) {
+            query += ` AND f.tempoEmMinutos <= ?`;
+            queryCount += ` AND f.tempoEmMinutos <= ?`;
+            params.push(tempo_max);
+            paramsCount.push(tempo_max);
+        }
+        if (tempo_min) {
+            query += ` AND f.tempoEmMinutos >= ?`;
+            queryCount += ` AND f.tempoEmMinutos >= ?`;
+            params.push(tempo_min);
+            paramsCount.push(tempo_min);
+        }
+
+        // Ordenação (Com trava de segurança para evitar injeção de SQL)
+        const colunasValidas = ['nome', 'tempoEmMinutos'];
+        if (ordem && colunasValidas.includes(ordem)) {
+            const dirValida = direcao === 'desc' ? 'DESC' : 'ASC';
+            query += ` ORDER BY f.${ordem} ${dirValida}`;
+        }
+
+        // Paginação usando LIMIT e OFFSET do SQLite
+        const limiteNum = parseInt(limite) || 11;
+        const paginaNum = parseInt(pagina) || 1;
+        const offset = (paginaNum - 1) * limiteNum;
+
+        query += ` LIMIT ? OFFSET ?`;
+        params.push(limiteNum, offset);
+
+        try {
+            const dados = await db.all(query, params);
+            const { total } = await db.get(queryCount, paramsCount);
+
+            res.json({
+                dados,
+                paginacao: {
+                    pagina_atual: paginaNum,
+                    itens_por_pagina: limiteNum,
+                    total_itens: total,
+                    total_paginas: Math.ceil(total / limiteNum)
+                }
+            });
+        } catch (error) {
+            res.status(500).json({ erro: "Erro interno no servidor" });
+        }
+    });
+
+    // Rota para buscar um filme específico pelo ID
+    app.get('/api/filmes/:id', async (req, res) => {
+        const filme = await db.get(`
+            SELECT f.*, d.nome as diretor_nome 
+            FROM filmes f JOIN diretores d ON f.diretor_id = d.id 
+            WHERE f.id = ?
+        `, [req.params.id]);
+
+        if (!filme) return res.status(404).json({ erro: "Filme não encontrado no banco" });
+        
+        res.json(filme);
+    });
+
+    // Inicia o banco antes de escutar a porta
+    iniciarBanco().then(() => {
+        app.listen(3000, '0.0.0.0', () => console.log('API conectada ao SQLite na porta 3000!!'));
+    });
