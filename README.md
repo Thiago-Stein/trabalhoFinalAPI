@@ -64,6 +64,7 @@ npm test
 * PUT /api/filmes/:id - Atualiza os dados de um filme existente.
 * DELETE /api/filmes/:id - Remove um filme do catálogo.
 
+--- 
 EXEMPLO VISUAL VIA POSTMAN:
 Primeiramente precisamos fazer login para mexer nos dados, para isso usaremos um POST que eu nomeei como "LoginADM":
 <img width="1282" height="833" alt="loginComoADM" src="https://github.com/user-attachments/assets/7fb60a4d-2296-41de-abed-12061f7a87c2" />
