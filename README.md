@@ -2,7 +2,7 @@
 
 Uma RESTful API robusta para gerenciamento de um catálogo de filmes, desenvolvida como projeto final/avaliação. O sistema inclui um banco de dados relacional, autenticação de rotas, paginação, filtros e testes automatizados.
 
-Deploy em Produção: [Acesse a API aqui](https://trabalho-api-de-filmes.onrender.com)
+Deploy: [Acesse a API aqui](https://trabalho-api-de-filmes.onrender.com)
 
 ---
 
@@ -28,8 +28,8 @@ Deploy em Produção: [Acesse a API aqui](https://trabalho-api-de-filmes.onrende
 
 ## Como rodar o projeto localmente
 
-1. Clone o repositório:
-git clone https://github.com/SEU_USUARIO/trabalho-api-de-filmes.git
+1. Clone o repositório: https://github.com/Thiago-Stein/trabalhoFinalAPI.git
+git clone 
 cd trabalho-api-de-filmes
 
 2. Instale as dependências:
@@ -101,7 +101,7 @@ Aqui é o GET MostrarFilmes pós edição do filme:
 
 <br>
 <br>
-Aqui utilizei o método DELET que chamei de DeletarFilme, onde após clicar em "Send" ele me retornou que o filme foi deletado!
+Aqui utilizei o método DELETE que chamei de DeletarFilme, onde após clicar em "Send" ele me retornou que o filme foi deletado!
 <img width="1282" height="830" alt="deletarFilme" src="https://github.com/user-attachments/assets/958eeba8-4f4b-4087-9381-6d472230ed56" />
 
 <br>
