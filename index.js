@@ -78,7 +78,7 @@ async function iniciarBanco() {
     }
 }
     //Parte dos Middleswares e login.
-        // O "Porteiro": Verifica se quem tá chamando a rota tem o crachá (token)
+        // Verifica se quem tá chamando a rota tem o token
     function checarToken(req, res, next) {
         const authHeader = req.headers['authorization'];
         const token = authHeader && authHeader.split(' ')[1]; // Tira a palavra "Bearer " da frente
