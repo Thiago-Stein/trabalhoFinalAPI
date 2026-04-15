@@ -66,7 +66,8 @@ npm test
 
 --- 
 EXEMPLO VISUAL VIA POSTMAN:
-Primeiramente precisamos fazer login para mexer nos dados, para isso usaremos um POST que eu nomeei como "LoginADM":
+
+###Primeiramente precisamos fazer login para mexer nos dados, para isso usaremos um POST que eu nomeei como "LoginADM":
 <img width="1282" height="833" alt="loginComoADM" src="https://github.com/user-attachments/assets/7fb60a4d-2296-41de-abed-12061f7a87c2" />
 
 Após isso, utilizei o meu método GET MostrarFilmes para vermos como esta a lista atual de filmes (Fui para a página 2 já que ao adicionar algum filme ele iria para lá! E para isso utilizei "/api/filmes?pagina=2"): 
