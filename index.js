@@ -17,8 +17,6 @@ async function iniciarBanco() {
         driver: sqlite3.Database
     });
 
-
-
     // Cria as tabelas
     await db.exec(`
         CREATE TABLE IF NOT EXISTS diretores (
