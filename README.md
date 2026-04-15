@@ -29,7 +29,7 @@ Deploy: [Acesse a API aqui](https://trabalho-api-de-filmes.onrender.com)
 ## Como rodar o projeto localmente
 
 1. Clone o repositório: 
-git clone https://github.com/Thiago-Stein/trabalhoFinalAPI.git
+git clone https://github.com/Thiago-Stein/trabalhoFinalAPI.git <br>
 cd trabalho-api-de-filmes
 
 2. Instale as dependências:
