@@ -108,6 +108,11 @@ async function iniciarBanco() {
         res.status(401).json({ erro: "Usuário ou senha incorretos" });
     });
 
+
+    app.get('/', (req, res) => {
+        res.redirect('/api/filmes');
+     });
+
     // Rota que lista os filmes com filtros, paginação e ordenação via Banco de Dados.
     app.get('/api/filmes', async (req, res) => {
         const { genero, tempo_max, tempo_min, ordem, direcao, pagina = 1, limite = 11 } = req.query;
